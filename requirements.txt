@@ -1,0 +1,6 @@
+torch==2.2.1
+jupyterlab==4.1.2
+numpy==1.26.4
+tqdm
+rich
+matplotlib
