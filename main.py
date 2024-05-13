@@ -1,6 +1,9 @@
 import model
 import torch
-import tqdm
+from rich.progress import track
+from rich import print
+from rich.panel import Panel
+from rich.padding import Padding
 import os
 import pickle
 # hyperparameters
@@ -58,14 +61,13 @@ val_data = data[n:]
 model = model.GPTLanguageModel(vocab_size=vocab_size, n_embd=n_embd, n_layer=n_layer, n_head=n_head, block_size=block_size, dropout=dropout)
 model.to(device) # use GPU device if available
 # print the number of parameters in the model
-print(sum(p.numel() for p in model.parameters())/1e6, 'M parameters')
 
 # create a PyTorch optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-print("to",device)
+print(Panel.fit(Padding("[yellow][bold]"+(str(sum(p.numel() for p in model.parameters())/1e6)+ '[/yellow][/bold] M parameters')+"\n[bold]to: "+device+"[/bold]", (2, 5), style="on blue", expand=False)))
 
-for iter in tqdm.tqdm(range(max_iters)):
+for iter in track(range(max_iters),"training",style="green"):
     # every once in a while evaluate the loss on train and val sets
     if iter % eval_interval == 0 or iter == max_iters - 1:
         losses = estimate_loss()
