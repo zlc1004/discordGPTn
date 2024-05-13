@@ -1,6 +1,6 @@
 import model
 import torch
-from rich.progress import track
+from rich.progress import Progress,SpinnerColumn,TimeElapsedColumn,MofNCompleteColumn
 from rich import print
 from rich.panel import Panel
 from rich.padding import Padding
@@ -9,7 +9,7 @@ import pickle
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel
 block_size = 256 # the maximum context length for predictions
-max_iters = 1 # how many iteration during training
+max_iters = 500000 # how many iteration during training
 eval_interval = 100 # how often to evaluate training
 learning_rate = 3e-4
 # device = "cpu"
@@ -67,7 +67,16 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 print(Panel.fit(Padding("[yellow][bold]"+(str(sum(p.numel() for p in model.parameters())/1e6)+ '[/yellow][/bold] M parameters')+"\n[bold]to: "+device+"[/bold]", (2, 5), style="on blue", expand=False)))
 
-for iter in track(range(max_iters),"training",style="green"):
+progress = Progress(
+    SpinnerColumn(),
+    *Progress.get_default_columns(),
+    MofNCompleteColumn(),
+    TimeElapsedColumn(),
+)
+task1 = progress.add_task("[red]Training...", total=max_iters)
+
+
+for iter in range(max_iters):
     # every once in a while evaluate the loss on train and val sets
     if iter % eval_interval == 0 or iter == max_iters - 1:
         losses = estimate_loss()
@@ -81,6 +90,7 @@ for iter in track(range(max_iters),"training",style="green"):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
+    progress.update(task1, 1)
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
