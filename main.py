@@ -6,16 +6,17 @@ import pickle
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel
 block_size = 256 # the maximum context length for predictions
-max_iters = 1800 # how many iteration during training
-eval_interval = 50 # how often to evaluate training
+max_iters = 1 # how many iteration during training
+eval_interval = 100 # how often to evaluate training
 learning_rate = 3e-4
-device = model.get_device()
+device = "cpu" # model.get_device()
 eval_iters = 100
 n_embd = 384
 n_head = 6
 n_layer = 6
 dropout = 0.2
 # data loading
+
 def get_batch(data, block_size, batch_size, device):
     # generate a small batch of data of inputs x and targets y
     ix = torch.randint(len(data) - block_size, (batch_size,))
@@ -61,6 +62,8 @@ print(sum(p.numel() for p in model.parameters())/1e6, 'M parameters')
 # create a PyTorch optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
+print("to",device)
+
 for iter in tqdm.tqdm(range(max_iters)):
     # every once in a while evaluate the loss on train and val sets
     if iter % eval_interval == 0 or iter == max_iters - 1:
@@ -83,7 +86,7 @@ print(generated_text)
 
 if not os.path.exists("data"):
     os.mkdir("data")
-with open('data/output.txt', 'w') as f:
+with open('data/output.txt', 'w', encoding="utf-8") as f:
     f.write(generated_text)
 
 if not os.path.exists("model"):
