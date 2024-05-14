@@ -89,6 +89,9 @@ for iter in tqdm.tqdm(range(max_iters)):
     loss.backward()
     optimizer.step()
 
+with open("model/model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 generated_text = tokenizer.decode(model.generateText(
@@ -102,9 +105,6 @@ with open('data/output.txt', 'w', encoding="utf-8") as f:
 
 if not os.path.exists("model"):
     os.mkdir("model")
-
-with open("model/model.pkl", "wb") as f:
-    pickle.dump(model, f)
 
 with open("model/tokenizer.pkl", "wb") as f:
     pickle.dump(tokenizer, f)
