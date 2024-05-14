@@ -9,7 +9,7 @@ import pickle
 # hyperparameters
 batch_size = 64  # how many independent sequences will we process in parallel
 block_size = 256  # the maximum context length for predictions
-max_iters = 1000000  # how many iteration during training
+max_iters = 1  # how many iteration during training
 eval_interval = 750  # how often to evaluate training
 learning_rate = 3e-4
 # device = "cpu"
