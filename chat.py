@@ -48,5 +48,5 @@ while True:
     except KeyboardInterrupt:
         break
 
-with open("chat.log", "w") as f:
+with open("chat.log", "w",encoding="utf-8") as f:
     f.write(message)
