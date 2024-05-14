@@ -41,7 +41,7 @@ async def on_message(message: discord.Message):
             return
         if message.channel.id in chanels:
             if str(message.content)=="!save":
-                with open("chat.log", "w") as f:
+                with open("chat.log", "w",encoding="utf-8") as f:
                     f.write(messageHistory)
                 await message.reply("Saved")
                 return
