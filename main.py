@@ -10,7 +10,7 @@ import pickle
 batch_size = 64  # how many independent sequences will we process in parallel
 block_size = 256  # the maximum context length for predictions
 max_iters = 500000  # how many iteration during training
-eval_interval = 100  # how often to evaluate training
+eval_interval = 750  # how often to evaluate training
 learning_rate = 3e-4
 # device = "cpu"
 device = model.get_device()
