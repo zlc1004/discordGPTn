@@ -90,7 +90,7 @@ for iter in range(max_iters):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
-    progress.update(task1, 1)
+    progress.update(task1, advance=1)
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
