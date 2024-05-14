@@ -91,7 +91,7 @@ for iter in tqdm.tqdm(range(max_iters)):
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
-generated_text = tokenizer.decode(model.generate(
+generated_text = tokenizer.decode(model.generateText(
     context, max_new_tokens=2000)[0].tolist())
 print(generated_text)
 

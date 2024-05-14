@@ -24,7 +24,7 @@ with open("model/tokenizer.pkl", "rb") as f:
 print(Panel("model loaded"))
 
 client = discord.Client(intents=intents)
-chanels=[1239710224332488704]
+chanels=[1239710224332488704,1239745226298622052,1239741201293250631]
 
 @client.event
 async def on_ready():
