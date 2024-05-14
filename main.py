@@ -72,6 +72,7 @@ progress = Progress(
     *Progress.get_default_columns(),
     MofNCompleteColumn(),
     TimeElapsedColumn(),
+    auto_refresh=True
 )
 task1 = progress.add_task("[red]Training...", total=max_iters)
 
@@ -90,7 +91,8 @@ for iter in range(max_iters):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
-    progress.update(task1, advance=1)
+    progress.advance(task1)
+    progress.refresh()
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
