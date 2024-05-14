@@ -1,6 +1,6 @@
 import model
 import torch
-from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn, MofNCompleteColumn
+import tqdm
 from rich import print
 from rich.panel import Panel
 from rich.padding import Padding
@@ -72,32 +72,22 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 print(Panel.fit(Padding("[yellow][bold]"+(str(sum(p.numel() for p in model.parameters())/1e6) +
       '[/yellow][/bold] M parameters')+"\n[bold]to: "+device+"[/bold]", (2, 5), style="on blue", expand=False)))
 
-with Progress(
-    SpinnerColumn(),
-    *Progress.get_default_columns(),
-    MofNCompleteColumn(),
-    TimeElapsedColumn(),
-    auto_refresh=True
-) as progress:
-    task1 = progress.add_task("[red]Training...", total=max_iters)
 
-    for iter in range(max_iters):
-        # every once in a while evaluate the loss on train and val sets
-        if iter % eval_interval == 0 or iter == max_iters - 1:
-            losses = estimate_loss()
-            print(
-                f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+for iter in tqdm.tqdm(range(max_iters)):
+    # every once in a while evaluate the loss on train and val sets
+    if iter % eval_interval == 0 or iter == max_iters - 1:
+        losses = estimate_loss()
+        print(
+            f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
-        # sample a batch of data
-        xb, yb = get_batch(train_data, block_size, batch_size, device)
+    # sample a batch of data
+    xb, yb = get_batch(train_data, block_size, batch_size, device)
 
-        # evaluate the loss
-        logits, loss = model(xb, yb)
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        optimizer.step()
-        progress.advance(task1)
-        progress.refresh()
+    # evaluate the loss
+    logits, loss = model(xb, yb)
+    optimizer.zero_grad(set_to_none=True)
+    loss.backward()
+    optimizer.step()
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
