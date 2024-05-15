@@ -1,11 +1,15 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+
 def get_device():
     # return "cpu"
     return 'cuda' if torch.cuda.is_available() else 'cpu' if torch.backends.mps.is_available() else 'cpu'
 
 # ------------
+
+
 class Tokenizer:
     def __init__(self, chars: list[str]):
         # create a mapping from characters to integers and viceversa
@@ -20,6 +24,7 @@ class Tokenizer:
         # decoder: take a list of integers, output a string
         return ''.join([self.token_to_char[token] for token in tokens])
 
+
 class Head(nn.Module):
     """ one head of self-attention """
 
@@ -28,7 +33,8 @@ class Head(nn.Module):
         self.key = nn.Linear(n_channels, head_size, bias=False)
         self.query = nn.Linear(n_channels, head_size, bias=False)
         self.value = nn.Linear(n_channels, head_size, bias=False)
-        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.register_buffer('tril', torch.tril(
+            torch.ones(block_size, block_size)))
 
         self.dropout = nn.Dropout(dropout)
 
@@ -39,14 +45,18 @@ class Head(nn.Module):
         k = self.key(x)  # (B, T, H)
         q = self.query(x)  # (B, T, H)
         # compute attention "affinities"
-        wei = q @ k.transpose(-2, -1) * k.shape[-1] ** -0.5  # (B, T, H) @ (B, H, T) -> (B, T, T)
-        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
+        # (B, T, H) @ (B, H, T) -> (B, T, T)
+        wei = q @ k.transpose(-2, -1) * k.shape[-1] ** -0.5
+        wei = wei.masked_fill(
+            self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
         wei = F.softmax(wei, dim=-1)  # (B, T, T)
         wei = self.dropout(wei)
         # weighted aggregation of the values
         v = self.value(x)  # (B, T, H)
         out = wei @ v  # (B, T, T) @ (B, T, H) -> (B, T, H)
         return out
+
+
 class TransformerBlock(nn.Module):
     """ Transformer block: communication followed by computation """
 
@@ -54,7 +64,8 @@ class TransformerBlock(nn.Module):
         # n_channels: channels dimension, n_head: the number of heads we'd like
         super().__init__()
         head_size = n_channels // n_head
-        self.sa = MultiHeadAttention(n_head, head_size, n_channels, block_size, dropout)
+        self.sa = MultiHeadAttention(
+            n_head, head_size, n_channels, block_size, dropout)
         self.ffwd = FeedForward(n_channels, dropout)
         self.ln1 = nn.LayerNorm(n_channels)
         self.ln2 = nn.LayerNorm(n_channels)
@@ -63,6 +74,8 @@ class TransformerBlock(nn.Module):
         x = x + self.sa(self.ln1(x))
         x = x + self.ffwd(self.ln2(x))
         return x
+
+
 class FeedForward(nn.Module):
     """ a simple linear layer followed by a non-linear so-called "activation function" """
 
@@ -77,12 +90,15 @@ class FeedForward(nn.Module):
 
     def forward(self, x):
         return self.net(x)
+
+
 class MultiHeadAttention(nn.Module):
     """ multiple heads of self-attention in parallel """
 
     def __init__(self, num_heads, head_size, n_channels, block_size, dropout):
         super().__init__()
-        self.heads = nn.ModuleList([Head(head_size, n_channels, block_size, dropout) for _ in range(num_heads)])
+        self.heads = nn.ModuleList(
+            [Head(head_size, n_channels, block_size, dropout) for _ in range(num_heads)])
         self.proj = nn.Linear(head_size * num_heads, n_channels)
         self.dropout = nn.Dropout(dropout)
 
@@ -90,6 +106,8 @@ class MultiHeadAttention(nn.Module):
         out = torch.cat([h(x) for h in self.heads], dim=-1)
         out = self.dropout(self.proj(out))
         return out
+
+
 class GPTLanguageModel(nn.Module):
 
     def __init__(self, vocab_size, n_embd, n_layer, n_head, block_size, dropout):
@@ -101,7 +119,8 @@ class GPTLanguageModel(nn.Module):
         self.vocab_size = vocab_size
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(*[TransformerBlock(n_embd, n_head, block_size, dropout) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(
+            *[TransformerBlock(n_embd, n_head, block_size, dropout) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embd)  # final layer norm
         self.lm_head = nn.Linear(n_embd, vocab_size)
 
@@ -121,7 +140,8 @@ class GPTLanguageModel(nn.Module):
 
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx)  # (B,T,C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=get_device()))  # (T,C)
+        pos_emb = self.position_embedding_table(
+            torch.arange(T, device=get_device()))  # (T,C)
         x = tok_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
         x = self.ln_f(x)  # (B,T,C)
@@ -135,7 +155,7 @@ class GPTLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, idx, max_new_tokens,messageBefore=""):
+    def generate(self, idx, max_new_tokens):
         # idx is (B, T) array of indices in the current context
         for _ in range(max_new_tokens):
             # crop idx to the last block_size tokens
@@ -153,7 +173,8 @@ class GPTLanguageModel(nn.Module):
             idx = torch.cat((idx, idx_next), dim=1)  # (B, T+1)
             yield idx
         yield idx
-    def generateText(self, idx, max_new_tokens,messageBefore=""):
+
+    def generateText(self, idx, max_new_tokens):
         # idx is (B, T) array of indices in the current context
         for _ in range(max_new_tokens):
             # crop idx to the last block_size tokens
