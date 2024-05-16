@@ -5,10 +5,11 @@ import pickle
 from rich import print
 from rich.panel import Panel
 from rich.padding import Padding
-import re,random
+import re
+import random
 
 reactFindPattern = re.compile(":[a-zA-Z0-9_]+:")
-emojiReplace={"😆":":laughing:","🍆":":eggplant:","😭":":sob:"}
+emojiReplace = {"😆": ":laughing:", "🍆": ":eggplant:", "😭": ":sob:"}
 max_new_tokens = 100
 
 
@@ -20,7 +21,7 @@ Panel.fit(Padding("to device", (2, 5), style="on blue", expand=False))
 print(Panel.fit(Padding("to [bold]"+device +
       "[/bold]", (2, 5), style="on blue", expand=False)))
 
-with open("model/model.pkl", "rb") as f:
+with open("model/model1mil.pkl", "rb") as f:
     gpt_model = pickle.load(f, fix_imports=False)
     gpt_model.to(device)
 with open("model/tokenizer.pkl", "rb") as f:
@@ -28,7 +29,8 @@ with open("model/tokenizer.pkl", "rb") as f:
 print(Panel("model loaded"))
 
 client = discord.Client(intents=intents)
-chanels = [1239710224332488704, 1239745226298622052, 1239741201293250631]
+channels = [1239710224332488704, 1239745226298622052, 1239741201293250631]
+
 
 @client.event
 async def on_ready():
@@ -37,21 +39,21 @@ async def on_ready():
 
 messageHistory = ""
 
+
 def get_emojis(guild):
-    emojis=list(guild.emojis)
-    out={}
+    emojis = list(guild.emojis)
+    out = {}
     for emoji in emojis:
-        out[emoji.name]=emoji
+        out[emoji.name] = emoji
     return out
-    
-    
+
 
 @client.event
 async def on_message(message: discord.Message):
     global messageHistory
     if message.author == client.user:
         return
-    if message.channel.id in chanels:
+    if message.channel.id in channels:
         if str(message.content) == "!save":
             with open("chat.log", "w", encoding="utf-8") as f:
                 f.write(messageHistory)
@@ -64,7 +66,7 @@ async def on_message(message: discord.Message):
         messageHistory += "\n"+str(message.content)+"\n"
         encodedMessage = tokenizer.encode(messageHistory)
         context = torch.zeros((1, len(encodedMessage)),
-                                dtype=torch.long, device=device)
+                              dtype=torch.long, device=device)
         for i in range(len(encodedMessage)):
             context[0, i] = (encodedMessage)[i]
         # print(context)
@@ -84,13 +86,15 @@ async def on_message(message: discord.Message):
                 tmp.append(i)
         messageHistory = "\n".join(tmp)
         print(Panel(messageHistory))
-        reacts=reactFindPattern.findall(messageHistory.split("\n")[-1])
+        reacts = reactFindPattern.findall(messageHistory.split("\n")[-1])
+        emojis = get_emojis(message.guild)
         for react in reacts:
-            await message.add_reaction(get_emojis(message.guild)[react.replace(":","")])
-            print(react)
+            if react in emojis.keys():
+                await message.add_reaction(reacts[react.replace(":", "")])
+                print(react)
         if str(message.content) == "!react":
             await message.add_reaction(random.choice(list(get_emojis(message.guild).values())))
             return
         await message.reply(messageHistory.split("\n")[-1])
 
-client.run('tokenRemoved')
+

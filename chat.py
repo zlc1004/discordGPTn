@@ -13,7 +13,7 @@ Panel.fit(Padding("to device", (2, 5), style="on blue", expand=False))
 print(Panel.fit(Padding("to [bold]"+device +
       "[/bold]", (2, 5), style="on blue", expand=False)))
 
-with open("model/model.pkl", "rb") as f:
+with open("model/model1mil.pkl", "rb") as f:
     gpt_model = pickle.load(f, fix_imports=False)
     gpt_model.to(device)
 with open("model/tokenizer.pkl", "rb") as f:
